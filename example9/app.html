@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>upload</title>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+</head>
+<body>
+  <div class="app">
+      <h1>upload</h1>
+  </div>
+ <input type="file" id="file_upload"/>
+ <br>
+ <br>
+ version:<br>
+ <input type="text" name="firstname" id="version" value="">
+ <br>
+  <br>
+ BundleID:<br>
+ <input type="text" name="bundle" id="bundle" value="">
+ <br>
+ <br>
+ <input type="button" value="upload" id="upload"/>
+  <br>
+ <div style="background:#848484;width:100px;height:10px;margin-top:5px; display: inline-block">
+  <div id="progressNumber" style="background:#428bca;width:0px;height:10px" >
+  </div>
+ </div>
+ <font id="percent" >0%</font>
+</body>
+<script>
+document.getElementById("upload").disabled = true;
+var file = null;
+$(function(){
+ $("#upload").click(function(){
+  upload();
+ });
+});
+var input = document.getElementById("file_upload");
+
+//文件域选择文件时, 执行readFile函数
+input.addEventListener('change',readFile,false);
+
+function readFile(){
+ $("#percent").html(0 + '%')
+ $("#progressNumber").css("width",""+0+"px");
+ document.getElementById("upload").disabled = false;
+ file = this.files[0];
+}
+//上传文件
+function upload(){
+  var xhr = new XMLHttpRequest();
+
+  var fd = new FormData();
+
+  fd.append("file", file);
+  var version = document.getElementById("version").value;
+  fd.append("version", version);
+  fd.append("type", location.pathname.slice(1));
+  //监听事件
+  xhr.upload.addEventListener("progress", uploadProgress, false);
+
+
+  //发送文件和表单自定义参数
+  xhr.open("POST", "/upload",true);
+
+  xhr.send(fd);
+ }
+
+ function uploadProgress(evt){
+  if (evt.lengthComputable) {
+   //evt.loaded：文件上传的大小 evt.total：文件总的大小
+   var percentComplete = Math.round((evt.loaded) * 100 / evt.total);
+   //加载进度条，同时显示信息
+   $("#percent").html(percentComplete + '%')
+   $("#progressNumber").css("width",""+percentComplete+"px");
+  }
+ }
+</script>
+</html>
