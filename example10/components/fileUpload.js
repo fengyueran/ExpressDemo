@@ -165,7 +165,7 @@ class FileUpload extends Component {
        <div>
           <div className='btn-toolbar'>
             <button type="button" className="btn" id="upload-file">
-              <span>Upload File</span>
+              <span>Choose File</span>
               <input id="fileupload" type="file" name="zipfile" ref="ajax_upload_file_input"
               onChange={this.handleFileSelect.bind(this)}/>
             </button>

@@ -6,18 +6,14 @@ import webpackDevConfig from './webpack.config.js';
 import webpack from 'webpack';
 import formidable from 'formidable';
 
-
-
 const app = express();
 
 const compiler = webpack(webpackDevConfig);
 app.use(express.static('public'));
 app.use(express.static('dist'));
 
-
 // attach to the compiler & the server
 app.use(webpackDevMiddleware(compiler, {
-
     // public path should be the same with webpack config
     publicPath: webpackDevConfig.output.publicPath,
     noInfo: true,
@@ -27,7 +23,6 @@ app.use(webpackDevMiddleware(compiler, {
 }));
 
 app.use(webpackHotMiddleware(compiler));
-
 
 app.get('/',function(req,res){
    res.sendFile(path.join(__dirname,'./src/app.html'));

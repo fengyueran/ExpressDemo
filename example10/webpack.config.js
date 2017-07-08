@@ -26,9 +26,13 @@ export default {
       // loader: 'eslint-loader', //指定使用什么loader，可以用字符串，也可以用数组
         },
         {
-      test: /\.(jsx|js)$/, //test值为正则表达式，当文件路径匹配时启用
-      loader: 'babel-loader', //指定使用什么loader，可以用字符串，也可以用数组
-      exclude: /regexp/, //可以使用exclude来排除一部分文件
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader'],
+        },
+        {
+          test: /\.(jsx|js)$/, //test值为正则表达式，当文件路径匹配时启用
+          loader: 'babel-loader', //指定使用什么loader，可以用字符串，也可以用数组
+          exclude: /regexp/, //可以使用exclude来排除一部分文件
       }],
   },
   plugins: [
