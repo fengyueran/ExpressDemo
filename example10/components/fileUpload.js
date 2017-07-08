@@ -1,19 +1,24 @@
 import React, { Component, PropTypes } from 'react';
 import { render } from 'react-dom';
+import { Line } from 'rc-progress';
 
 class FilePreview extends Component {
   render() {
-    // const loading = this.loading(this.state.loading);
-    // const uploading = this.loading(this.props.data.loading);
-    //
-    // const preview = this.preview();
-
+    const { progress } = this.props;
     return (
       <div className="preview-item">
-        {// {uploading}
-        // {loading}
-      }
-        <div className="filename-space">{this.props.data.name}</div>
+       <div>
+         <div className="filename-space">{this.props.data.name}</div>
+         <div className="progress">
+           <div style={{ width:"100%" }}>
+             <Line  style={{marginLeft: 2, marginTop:8 }} percent={progress} strokeWidth="1" strokeColor="#367EED" trailColor="#dddddd" trailWidth="1" />
+           </div>
+           <div className="progress-num">{progress}%</div>
+         </div>
+       </div>
+       <div className="inputtext">
+         <input type="text" name="bundle" id="bundle"  ref="bundle" placeholder="bundle id"/>
+       </div>
         <button className="btn"
                 onClick={this.props.onRemove}>
           <span>remove</span>
@@ -27,19 +32,19 @@ class FilePreview extends Component {
   }
 }
 
-
+FilePreview.PropTypes = {
+  progress:PropTypes.number,
+}
 
 
 
 class FileUpload extends Component {
   constructor(props) {
       super(props);
-      this.state = { fileList: [] };
-   }
-
-   componentWillReceiveProps(newProps) {
-     console.log('111111');
-      // this.updateProps(newProps)
+      this.state = {
+        fileList: [],
+        progress:0
+       };
    }
 
   handleFileSelect(e) {
@@ -47,7 +52,8 @@ class FileUpload extends Component {
     this.files = files;
     const fileList = Object.keys(files).map(file => files[file]);
     this.setState({
-      fileList
+      fileList,
+      progress:0
     });
   }
 
@@ -60,84 +66,70 @@ class FileUpload extends Component {
   }
 
   uploadFile() {
-      /*mill参数是当前时刻毫秒数，file第一次进行上传时会添加为file的属性，也可在beforeUpload为其添加，之后同一文件的mill不会更改，作为文件的识别id*/
-
-
-
       if (!this.files) return
       if (!this.props.options.baseUrl) throw new Error('baseUrl missing in options')
 
-      /*用于存放当前作用域的东西*/
-      const scope = {}
       /*组装FormData*/
       let formData = new FormData()
+      const bundleId = this.refs.FilePreview.refs.bundle.value;
       /*If we need to add fields before file data append here*/
-      // if(this.textBeforeFiles){
-      //    formData = this.appendFieldsToFormData(formData);
-      // }
+      formData.append("bundleId", bundleId);
 
+      const fieldNameType = typeof this.fileFieldName
 
-      const baseUrl = this.baseUrl
-
-
-
-
-      const targeturl = baseUrl;
+      /*判断是用什么方式作为formdata item 的 name*/
+      Object.keys(this.files).forEach(key => {
+            if(key == 'length') return
+            const file = this.files[key]
+            formData.append(file.name, file)
+          });
 
       /*AJAX上传部分*/
       const xhr = new XMLHttpRequest()
       xhr.open('POST', '/upload', true)
 
-      /*处理超时。用定时器判断超时，不然xhr state=4 catch的错误无法判断是超时*/
-      // if(this.timeout) {
-      //     xhr.timeout = this.timeout
-      //     xhr.ontimeout = () => {
-      //         this.uploadError({type: 'TIMEOUTERROR', message: 'timeout'})
-      //         scope.isTimeout = false
-      //     }
-      //     scope.isTimeout = false
-      //     setTimeout(()=>{
-      //         scope.isTimeout = true
-      //     },this.timeout)
-      // }
-
       xhr.onreadystatechange = () => {
           /*xhr finish*/
           try {
               if (xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 400) {
-                  const resp = this.dataType == 'json' ? JSON.parse(xhr.responseText) : xhr.responseText
-                //  this.uploadSuccess(resp)
+                  const resp = this.dataType == 'json' ? JSON.parse(xhr.responseText) : xhr.responseText;
+                  console.log('upload success..!')
               } else if (xhr.readyState == 4) {
                   /*xhr fail*/
                   const resp = this.dataType == 'json' ? JSON.parse(xhr.responseText) : xhr.responseText
-                  // this.uploadFail(resp)
+                  alert(resp);
               }
           } catch (e) {
-              /*超时抛出不一样的错误，不在这里处理*/
-              !scope.isTimeout && this.uploadError({type: 'FINISHERROR', message: e.message})
+              alert(e.message);
           }
       }
       /*xhr error*/
       xhr.onerror = () => {
           try {
-              const resp = this.dataType == 'json' ? JSON.parse(xhr.responseText) : xhr.responseText
-            //  this.uploadError({type: 'XHRERROR', message: resp})
+              const resp = this.dataType == 'json' ? JSON.parse(xhr.responseText) : xhr.responseText;
+              alert(resp);
           } catch (e) {
-            //  this.uploadError({type: 'XHRERROR', message: e.message})
+              alert(e.message);
           }
       }
-      /*这里部分浏览器实现不一致，而且IE没有这个方法*/
+
+      const uploadContext = this;
       xhr.onprogress = xhr.upload.onprogress = progress => {
-        console.log(progress);
-        //  this.uploading(progress, mill)
+          if (progress.total == 0) {
+            return;
+          }
+          let uploadProgress = progress.loaded/progress.total * 100;
+          uploadProgress = parseInt(uploadProgress, 10);
+          uploadContext.setState({
+            progress:uploadProgress,
+          })
+          console.log('loading...',uploadProgress+'%');
       }
 
       xhr.send(formData)
 
-
-      /*trigger执行上传的用户回调*/
-    //  this.doUpload(this.files, mill, currentXHRID)
-
+      /*清除input的值*/
+      this.refs['ajax_upload_file_input'].value = ''
   }
 
   previews() {
@@ -153,12 +145,14 @@ class FileUpload extends Component {
           // });
         }
 
-
+        const progress = this.state.progress;
         return (
           <FilePreview key={index}
                        data={file}
                        onRemove={removeItem}
-                       onUpload={uploadFile}/>
+                       progress={progress}
+                       onUpload={uploadFile}
+                       ref="FilePreview"/>
         );
       });
     }
@@ -172,7 +166,7 @@ class FileUpload extends Component {
           <div className='btn-toolbar'>
             <button type="button" className="btn" id="upload-file">
               <span>Upload File</span>
-              <input id="fileupload" type="file" name="zipfile"
+              <input id="fileupload" type="file" name="zipfile" ref="ajax_upload_file_input"
               onChange={this.handleFileSelect.bind(this)}/>
             </button>
           </div>

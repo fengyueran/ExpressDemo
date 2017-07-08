@@ -4,10 +4,11 @@ import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import webpackDevConfig from './webpack.config.js';
 import webpack from 'webpack';
-var formidable = require('formidable');
+import formidable from 'formidable';
 
 
-var app = express();
+
+const app = express();
 
 const compiler = webpack(webpackDevConfig);
 app.use(express.static('public'));
@@ -34,14 +35,14 @@ app.get('/',function(req,res){
 
 app.post('/upload', function (req, res) {
     var form = new formidable.IncomingForm();
-    form.uploadDir = "uploads/";
+    form.uploadDir = "upload/";
     form.keepExtensions = true;
     form.parse(req, function(err, fields, files) {
         res.writeHead(200, {'content-type': 'text/plain'});
         res.write('received upload:\n\n');
         res.end();
         console.log("parse done");
-        //console.log(files);
+        // console.log(files);
     });
 });
 
